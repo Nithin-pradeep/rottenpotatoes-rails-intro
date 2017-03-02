@@ -11,25 +11,47 @@ class MoviesController < ApplicationController
   end
 
   def index
-   @all_ratings = ['G','PG','PG-13','R']
-   if params[:ratings]
-     @movies = Movie.where(rating: params[:ratings].keys)
-   end
-   if params[:ratings]
-     @movies = Movie.where(rating: params[:ratings].keys)
-   end 
-    case params[:sort]
-    when 'title'
-      @movies = Movie.order('title ASC')
-      @title_hilite = 'hilite'
-    when 'release_date'
-     @movies = Movie.order('release_date ASC')
-      @release_hilite = 'hilite'
+    @all_ratings = ['G','PG','PG-13','R']
+    redirect = false
+    logger.debug(session.inspect)
+    if params[:sort]
+      @sort = params[:sort]
+      session[:sort] = params[:sort]
+    elsif session[:sort]
+      @sort = session[:sort]
+      redirect = true
     else
-      params[:ratings] ? Movie.where(rating: params[:ratings].keys):
-       @movies = Movie.all
+      @sort = nil
     end
-
+    if params[:commit] == "Refresh" and params[:ratings].nil?
+      @ratings = nil
+      session[:ratings] = nil
+    elsif params[:ratings]
+      @ratings = params[:ratings]
+      session[:ratings] = params[:ratings]
+    elsif session[:ratings]
+      @ratings = session[:ratings]
+      redirect = true
+    else
+      @ratings = nil
+    end
+    if redirect
+      flash.keep
+      redirect_to movies_path :sort=>@sort, :ratings=>@ratings
+    end
+    
+    if @ratings and @sort
+      @movies = Movie.where(:rating => @ratings.keys).order(@sort)
+    elsif @ratings
+      @movies = Movie.where(:rating => @ratings.keys)
+    elsif @sort 
+      @movies = Movie.order(@sort)
+    else
+      @movies = Movie.all
+    end
+    if !@ratings
+      @ratings = Hash.new
+    end
   end
 
   def new
