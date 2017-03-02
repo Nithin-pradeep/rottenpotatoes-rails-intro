@@ -15,7 +15,9 @@ class MoviesController < ApplicationController
    if params[:ratings]
      @movies = Movie.where(rating: params[:ratings].keys)
    end
-   
+   if params[:ratings]
+     @movies = Movie.where(rating: params[:ratings].keys)
+   end 
     case params[:sort]
     when 'title'
       @movies = Movie.order('title ASC')
